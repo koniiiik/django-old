@@ -271,7 +271,7 @@ class SQLCompiler(object):
         if start_alias:
             seen = {None: start_alias}
         for field, model in opts.get_fields_with_model():
-            if local_only and model is not None:
+            if (local_only and model is not None) or field.virtual:
                 continue
             if start_alias:
                 try:
@@ -770,7 +770,7 @@ class SQLCompiler(object):
                         if self.query.select_fields:
                             fields = self.query.select_fields + self.query.related_select_fields
                         else:
-                            fields = self.query.model._meta.fields
+                            fields = [f for f in self.query.model._meta.fields if not f.virtual]
                         # If the field was deferred, exclude it from being passed
                         # into `resolve_columns` because it wasn't selected.
                         only_load = self.deferred_to_columns()

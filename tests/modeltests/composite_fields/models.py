@@ -6,3 +6,6 @@ class Person(models.Model):
     birthday = models.DateField()
 
     full_name = models.CompositeField(first_name, last_name, primary_key=True)
+
+    def __unicode__(self):
+        return u'%s %s' % (self.first_name, self.last_name)
