@@ -129,6 +129,42 @@ def smart_str(s, encoding='utf-8', strings_only=False, errors='strict'):
     else:
         return s
 
+def quote(s, unsafe_chars=""":/_#?;@&=+$,"<>%\\""", escape="_"):
+    """
+    Used in the admin and in CompositeValues to get rid of unsafe
+    characters. Similar to urllib.quote, except that the default quoting
+    is different to avoid being unquoted by the Web browser.
+    """
+    if not isinstance(s, basestring):
+        return s
+    res = list(s)
+    unsafe_chars += escape
+    for i in range(len(res)):
+        c = res[i]
+        if c in unsafe_chars:
+            res[i] = '%s%02X' % (escape, ord(c))
+    return "".join(res)
+
+def unquote(s, escape="_"):
+    """
+    Undo the effects of quote(). Based heavily on urllib.unquote().
+    """
+    mychr = chr
+    myatoi = int
+    list = s.split(escape)
+    res = [list[0]]
+    myappend = res.append
+    del list[0]
+    for item in list:
+        if item[1:2]:
+            try:
+                myappend(mychr(myatoi(item[:2], 16)) + item[2:])
+            except ValueError:
+                myappend(escape + item)
+        else:
+            myappend(escape + item)
+    return "".join(res)
+
 def iri_to_uri(iri):
     """
     Convert an Internationalized Resource Identifier (IRI) portion to a URI

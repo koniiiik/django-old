@@ -5,13 +5,13 @@ from django.core.paginator import InvalidPage
 from django.db import models
 from django.db.models.fields import FieldDoesNotExist
 from django.utils.datastructures import SortedDict
-from django.utils.encoding import force_unicode, smart_str
+from django.utils.encoding import force_unicode, quote, smart_str
 from django.utils.translation import ugettext, ugettext_lazy
 from django.utils.http import urlencode
 
 from django.contrib.admin import FieldListFilter
 from django.contrib.admin.options import IncorrectLookupParameters
-from django.contrib.admin.util import (quote, get_fields_from_path,
+from django.contrib.admin.util import (get_fields_from_path,
     lookup_needs_distinct, prepare_lookup_value)
 
 # Changelist settings
