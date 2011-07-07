@@ -7,6 +7,9 @@ class Person(models.Model):
 
     full_name = models.CompositeField(first_name, last_name, primary_key=True)
 
+    class Meta:
+        ordering = ('last_name', 'first_name')
+
     def __unicode__(self):
         return u'%s %s' % (self.first_name, self.last_name)
 

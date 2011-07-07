@@ -51,8 +51,8 @@ class CompositeFieldTests(TestCase):
                                                   ('George', 'Harrison')])
         self.assertEqual(qs.count(), 2)
         self.assertQuerysetEqual(qs, [
+            '<Person: George Harrison>',
             '<Person: John Lennon>',
-            '<Person: George Harrison>'
         ])
 
     def test_cf_primary_key(self):
@@ -72,8 +72,8 @@ class CompositeFieldTests(TestCase):
                                            ('George', 'Harrison')])
         self.assertEqual(qs.count(), 2)
         self.assertQuerysetEqual(qs, [
+            '<Person: George Harrison>',
             '<Person: John Lennon>',
-            '<Person: George Harrison>'
         ])
 
     def test_composite_val_string_repr(self):
