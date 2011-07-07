@@ -1,9 +1,11 @@
-from datetime import date
+from datetime import date, datetime, time
+from decimal import Decimal
 
 from django.test import TestCase
 from django.db.models.fields import FieldDoesNotExist
+from django.utils.encoding import smart_unicode
 
-from models import Person
+from models import Person, MostFieldTypes
 
 class CompositeFieldTests(TestCase):
 
@@ -73,3 +75,32 @@ class CompositeFieldTests(TestCase):
             '<Person: John Lennon>',
             '<Person: George Harrison>'
         ])
+
+    def test_composite_val_string_repr(self):
+        instance = MostFieldTypes.objects.create(
+                bool_field=True,
+                char_field="some~unpleasant, string!#%;'",
+                date_field=date(2011, 7, 7),
+                dtime_field=datetime(2010, 3, 4, 12, 47, 47),
+                time_field=time(10, 11, 12),
+                dec_field=Decimal('123.4747'),
+                float_field=47.474,
+                int_field=474747
+        )
+        unicode_repr = smart_unicode(instance.all_fields)
+        self.assertEqual(unicode_repr, u"True,some~7Eunpleasant~2C string!#%;',2011-07-07,2010-03-04 12:47:47,10:11:12,123.4747,47.474,474747")
+        another = MostFieldTypes(all_fields=unicode_repr)
+        self.assertEqual(instance.all_fields, another.all_fields)
+
+        # We modify the new clone a bit and save it to have something else
+        # in the DB.
+        another.bool_field=None
+        another.char_field='Some;`).,2~other\\/unpleasant&^%#string'
+        another.save()
+        self.assertNotEqual(instance.pk, another.pk)
+
+        field = MostFieldTypes._meta.get_field('all_fields')
+        unpacked = field.to_python(unicode_repr)
+        fetched = MostFieldTypes.objects.get(all_fields=unpacked)
+        self.assertEqual(fetched.pk, instance.pk)
+        self.assertEqual(fetched.all_fields, instance.all_fields)
