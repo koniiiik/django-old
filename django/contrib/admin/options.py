@@ -27,7 +27,7 @@ from django.utils.safestring import mark_safe
 from django.utils.text import capfirst, get_text_list
 from django.utils.translation import ugettext as _
 from django.utils.translation import ungettext
-from django.utils.encoding import force_unicode, unquote
+from django.utils.encoding import force_unicode, quote, unquote
 
 HORIZONTAL, VERTICAL = 1, 2
 # returns the <ul> class for a given radio_admin field
@@ -776,7 +776,7 @@ class ModelAdmin(BaseModelAdmin):
             self.message_user(request, msg + ' ' + _("You may edit it again below."))
             if "_popup" in request.POST:
                 post_url_continue += "?_popup=1"
-            return HttpResponseRedirect(post_url_continue % pk_value)
+            return HttpResponseRedirect(post_url_continue % quote(force_unicode(pk_value)))
 
         if "_popup" in request.POST:
             return HttpResponse(

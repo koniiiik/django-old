@@ -1,7 +1,6 @@
 from django.db import models
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import User
-from django.contrib.admin.util import quote
 from django.utils.translation import ugettext_lazy as _
 from django.utils.encoding import quote, smart_unicode
 from django.utils.safestring import mark_safe
@@ -56,7 +55,11 @@ class LogEntry(models.Model):
 
     def get_edited_object(self):
         "Returns the edited object represented by this log entry"
-        return self.content_type.get_object_for_this_type(pk=self.object_id)
+        # We need to transform the ID into its Python representation to
+        # support composite fields.
+        model = self.content_type.model_class()
+        object_id = model._meta.pk.to_python(self.object_id)
+        return self.content_type.get_object_for_this_type(pk=object_id)
 
     def get_admin_url(self):
         """

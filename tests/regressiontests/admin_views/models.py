@@ -541,6 +541,7 @@ class ComplexSortedPerson(models.Model):
     age = models.PositiveIntegerField()
     is_employee = models.NullBooleanField()
 
+
 class PrePopulatedPostLargeSlug(models.Model):
     """
     Regression test for #15938: a large max_length for the slugfield must not
@@ -551,9 +552,11 @@ class PrePopulatedPostLargeSlug(models.Model):
     published = models.BooleanField()
     slug = models.SlugField(max_length=1000)
 
+
 class AdminOrderedField(models.Model):
     order = models.IntegerField()
     stuff = models.CharField(max_length=200)
+
 
 class AdminOrderedModelMethod(models.Model):
     order = models.IntegerField()
@@ -562,13 +565,16 @@ class AdminOrderedModelMethod(models.Model):
         return self.order
     some_order.admin_order_field = 'order'
 
+
 class AdminOrderedAdminMethod(models.Model):
     order = models.IntegerField()
     stuff = models.CharField(max_length=200)
 
+
 class AdminOrderedCallable(models.Model):
     order = models.IntegerField()
     stuff = models.CharField(max_length=200)
+
 
 class Report(models.Model):
     title = models.CharField(max_length=100)
@@ -606,3 +612,13 @@ class UnorderedObject(models.Model):
     """
     name = models.CharField(max_length=255)
     bool = models.BooleanField(default=True)
+
+
+class PersonWithCompositePK(models.Model):
+    first_name = models.CharField(max_length=47)
+    last_name = models.CharField(max_length=47)
+
+    full_name = models.CompositeField(first_name, last_name, primary_key=True)
+
+    def __unicode__(self):
+        return u"%s %s" % self.full_name

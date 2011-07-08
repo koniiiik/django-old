@@ -375,4 +375,4 @@ class ChangeList(object):
             return qs
 
     def url_for_result(self, result):
-        return "%s/" % quote(getattr(result, self.pk_attname))
+        return "%s/" % quote(force_unicode(getattr(result, self.pk_attname)))
