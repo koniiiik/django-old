@@ -34,6 +34,9 @@ class VirtualField(Field):
     def get_enclosed_fields(self):
         return None
 
+    def formfield(self):
+        return None
+
     def __get__(self, instance, owner):
         return None
 
