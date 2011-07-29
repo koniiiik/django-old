@@ -57,7 +57,7 @@ class CompositeFieldTests(TestCase):
 
     def test_cf_order(self):
         qs = Person.objects.order_by('full_name')
-        str(qs.query)  # Currently throws
+        str(qs.query)
         self.assertQuerysetEqual(qs, [
             '<Person: George Harrison>',
             '<Person: John Lennon>',
