@@ -56,4 +56,3 @@ class SentenceFreq(models.Model):
 
     def __unicode__(self):
         return self.sentence.sentence.replace('?', self.weekday.name)
-
