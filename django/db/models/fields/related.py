@@ -987,11 +987,6 @@ class ForeignKey(RelatedField, Field):
     def contribute_to_class(self, cls, name):
         super(ForeignKey, self).contribute_to_class(cls, name)
         setattr(cls, self.name, ReverseSingleRelatedObjectDescriptor(self))
-        if isinstance(self.rel.to, basestring):
-            target = self.rel.to
-        else:
-            target = self.rel.to._meta.db_table
-        cls._meta.duplicate_targets[self.column] = (target, "o2m")
 
     def contribute_to_related_class(self, cls, related):
         # Internal FK's - i.e., those with a related name ending with '+' -
@@ -1219,12 +1214,6 @@ class ManyToManyField(RelatedField, Field):
             def resolve_through_model(field, model, cls):
                 field.rel.through = model
             add_lazy_relation(cls, self, self.rel.through, resolve_through_model)
-
-        if isinstance(self.rel.to, basestring):
-            target = self.rel.to
-        else:
-            target = self.rel.to._meta.db_table
-        cls._meta.duplicate_targets[self.column] = (target, "m2m")
 
     def contribute_to_related_class(self, cls, related):
         # Internal M2Ms (i.e., those with a related name ending with '+')

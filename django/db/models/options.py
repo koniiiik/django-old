@@ -3,7 +3,7 @@ from bisect import bisect
 
 from django.conf import settings
 from django.db.models.related import RelatedObject
-from django.db.models.fields.related import ManyToManyRel
+from django.db.models.fields.related import ForeignKey, ManyToManyRel
 from django.db.models.fields import AutoField, FieldDoesNotExist
 from django.db.models.fields.proxy import OrderWrt
 from django.db.models.loading import get_models, app_cache_ready
@@ -51,7 +51,6 @@ class Options(object):
         # concrete models, the concrete_model is always the class itself.
         self.concrete_model = None
         self.parents = SortedDict()
-        self.duplicate_targets = {}
         self.auto_created = False
 
         # To handle various inheritance situations, we need to track where
@@ -140,24 +139,6 @@ class Options(object):
                         auto_created=True)
                 model.add_to_class('id', auto)
 
-        # Determine any sets of fields that are pointing to the same targets
-        # (e.g. two ForeignKeys to the same remote model). The query
-        # construction code needs to know this. At the end of this,
-        # self.duplicate_targets will map each duplicate field column to the
-        # columns it duplicates.
-        collections = {}
-        for column, target in self.duplicate_targets.iteritems():
-            try:
-                collections[target].add(column)
-            except KeyError:
-                collections[target] = set([column])
-        self.duplicate_targets = {}
-        for elt in collections.itervalues():
-            if len(elt) == 1:
-                continue
-            for column in elt:
-                self.duplicate_targets[column] = elt.difference(set([column]))
-
     def add_field(self, field):
         # Insert the given field in the order in which it was created, using
         # the "creation_counter" attribute of the field.
@@ -213,6 +194,42 @@ class Options(object):
         activate(lang)
         return raw
     verbose_name_raw = property(verbose_name_raw)
+
+    def _duplicate_targets(self):
+        """
+        Determine any sets of fields that are pointing to the same targets
+        (e.g. two ForeignKeys to the same remote model). The query
+        construction code needs to know this.
+        
+        Returns a dictionary mapping each duplicate field column to the
+        columns it duplicates.
+        """
+        try:
+            self._dupe_targets_cache
+        except AttributeError:
+            self._fill_dupe_cache()
+        return self._dupe_targets_cache
+    duplicate_targets = property(_duplicate_targets)
+
+    def _fill_dupe_cache(self):
+        local_fks = [f for f in self.local_fields if isinstance(f, ForeignKey)]
+        column_targets = dict((f.column, (f.rel.to._meta.db_table, "o2m"))
+                              for f in local_fks)
+        column_targets.update((f.column, (f.rel.to._meta.db_table, "m2m"))
+                              for f in self.local_many_to_many)
+        collections = {}
+        for column, target in column_targets.iteritems():
+            try:
+                collections[target].add(column)
+            except KeyError:
+                collections[target] = set([column])
+        dupe_targets = {}
+        for elt in collections.itervalues():
+            if len(elt) == 1:
+                continue
+            for column in elt:
+                dupe_targets[column] = elt.difference(set([column]))
+        self._dupe_targets_cache = dupe_targets
 
     def _fields(self):
         """
