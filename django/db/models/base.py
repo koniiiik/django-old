@@ -100,8 +100,7 @@ class ModelBase(type):
 
         # All the fields of any type declared on this model
         new_fields = new_class._meta.local_fields + \
-                     new_class._meta.local_many_to_many + \
-                     new_class._meta.virtual_fields
+                     new_class._meta.local_many_to_many
         field_names = set([f.name for f in new_fields])
 
         # Basic setup for proxy models.
@@ -176,16 +175,6 @@ class ModelBase(type):
             # unless they have redefined any of them.
             if is_proxy:
                 new_class.copy_managers(original_base._meta.concrete_managers)
-
-            # Inherit virtual fields (like GenericForeignKey) from the parent
-            # class
-            for field in base._meta.virtual_fields:
-                if base._meta.abstract and field.name in field_names:
-                    raise FieldError('Local field %r in class %r clashes '\
-                                     'with field of similar name from '\
-                                     'abstract base class %r' % \
-                                        (field.name, name, base.__name__))
-                new_class.add_to_class(field.name, copy.deepcopy(field))
 
         if abstract:
             # Abstract base models can't be instantiated and don't appear in
@@ -286,11 +275,11 @@ class Model(object):
         # The reason for the kwargs check is that standard iterator passes in by
         # args, and instantiation for iteration is 33% faster.
         args_len = len(args)
-        if args_len > len(self._meta.fields):
+        if args_len > len(self._meta.concrete_fields):
             # Daft, but matches old exception sans the err msg.
             raise IndexError("Number of args exceeds number of fields")
 
-        fields_iter = iter(self._meta.fields)
+        fields_iter = iter(self._meta.concrete_fields)
         if not kwargs:
             # The ordering of the izip calls matter - izip throws StopIteration
             # when an iter throws it. So if the first iter throws it, the second
@@ -353,10 +342,7 @@ class Model(object):
                 # "user_id") so that the object gets properly cached (and type
                 # checked) by the RelatedObjectDescriptor.
                 setattr(self, field.name, rel_obj)
-            elif not field.virtual or val:
-                # We set the value unless we're setting a virtual field
-                # to an empty value which would fail or worse, override an
-                # explicitly-specified real field's value.
+            else:
                 setattr(self, field.attname, val)
 
         if kwargs:
@@ -364,7 +350,16 @@ class Model(object):
                 try:
                     if isinstance(getattr(self.__class__, prop), property):
                         setattr(self, prop, kwargs.pop(prop))
+                        continue
                 except AttributeError:
+                    pass
+
+                # We also have to try to look the name up again in case it
+                # was a virtual field.
+                try:
+                    self._meta.get_field_by_name(prop)
+                    setattr(self, prop, kwargs.pop(prop))
+                except FieldDoesNotExist:
                     pass
             if kwargs:
                 raise TypeError("'%s' is an invalid keyword argument for this function" % kwargs.keys()[0])
@@ -514,7 +509,7 @@ class Model(object):
                 return
 
         if not meta.proxy:
-            non_pks = [f for f in meta.local_fields if not f.primary_key]
+            non_pks = [f for f in meta.local_concrete if not f.primary_key]
 
             # First, try an UPDATE. If that doesn't update anything, do an INSERT.
             pk_val = self._get_pk_val(meta)
@@ -542,7 +537,7 @@ class Model(object):
                     order_value = manager.using(using).filter(**{field.name: getattr(self, field.attname)}).count()
                     self._order = order_value
 
-                fields = meta.local_fields
+                fields = meta.local_concrete
                 if not pk_set:
                     if force_update:
                         raise ValueError("Cannot force an update in save() with no primary key.")

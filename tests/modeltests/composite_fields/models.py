@@ -36,6 +36,22 @@ class MostFieldTypes(models.Model):
                                        dtime_field, time_field, dec_field,
                                        float_field, int_field)
 
+    class Meta:
+        ordering = ('char_field',)
+
+    def __unicode__(self):
+        return u'char: %r; dtime: %r; int: %r' % (self.char_field,
+                                                  self.dtime_field,
+                                                  self.int_field)
+
+
+class EvenMoreFields(MostFieldTypes):
+    extra_field = models.IntegerField()
+
+    def __unicode__(self):
+        super_unicode = super(EvenMoreFields, self).__unicode__()
+        return u'%s; extra: %r' % (super_unicode, self.extra_field)
+
 
 class WeekDay(models.Model):
     pos = models.IntegerField(primary_key=True)

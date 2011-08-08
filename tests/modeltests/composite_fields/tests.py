@@ -5,7 +5,8 @@ from django.test import TestCase
 from django.db.models.fields import FieldDoesNotExist
 from django.utils.encoding import smart_unicode
 
-from models import Person, MostFieldTypes, WeekDay, Sentence, SentenceFreq
+from models import Person, MostFieldTypes, EvenMoreFields, WeekDay, \
+                   Sentence, SentenceFreq
 
 class CompositeFieldTests(TestCase):
 
@@ -105,14 +106,14 @@ class CompositeFieldTests(TestCase):
 
     def test_composite_val_string_repr(self):
         instance = MostFieldTypes.objects.create(
-                bool_field=True,
-                char_field="some~unpleasant, string!#%;'",
-                date_field=date(2011, 7, 7),
-                dtime_field=datetime(2010, 3, 4, 12, 47, 47),
-                time_field=time(10, 11, 12),
-                dec_field=Decimal('123.4747'),
-                float_field=47.474,
-                int_field=474747
+            bool_field=True,
+            char_field="some~unpleasant, string!#%;'",
+            date_field=date(2011, 7, 7),
+            dtime_field=datetime(2010, 3, 4, 12, 47, 47),
+            time_field=time(10, 11, 12),
+            dec_field=Decimal('123.4747'),
+            float_field=47.474,
+            int_field=474747,
         )
         unicode_repr = smart_unicode(instance.all_fields)
         self.assertEqual(unicode_repr, u"True,some~7Eunpleasant~2C string!#%;',2011-07-07,2010-03-04 12:47:47,10:11:12,123.4747,47.474,474747")
@@ -141,3 +142,38 @@ class CompositeFieldTests(TestCase):
             weekday=tuesday, sentence=big_day, score=210)
         tues_big_day.save()
         self.assertEqual(tues_big_day.pk, (tuesday.pk, big_day.pk))
+
+    def test_cf_concrete_inheritance(self):
+        mft = MostFieldTypes.objects.create(
+            bool_field=True,
+            char_field="some~unpleasant, string!#%;'",
+            date_field=date(2011, 7, 7),
+            dtime_field=datetime(2010, 3, 4, 12, 47, 47),
+            time_field=time(10, 11, 12),
+            dec_field=Decimal('123.4747'),
+            float_field=47.474,
+            int_field=474747,
+        )
+        emf = EvenMoreFields.objects.create(
+            all_fields=(
+                False,
+                "a very pleasant string",
+                date(2010, 7, 7),
+                datetime(2011, 4, 3, 10, 11, 12),
+                time(4, 7, 7),
+                Decimal('321.4747'),
+                74.7,
+                747474,
+            ),
+            extra_field=47,
+        )
+        self.assertFalse(emf.bool_field)
+        self.assertEqual(emf.int_field, 747474)
+        self.assertEqual(emf.extra_field, 47)
+        self.assertQuerysetEqual(MostFieldTypes.objects.all(), [
+            "<MostFieldTypes: char: u'a very pleasant string'; dtime: datetime.datetime(2011, 4, 3, 10, 11, 12); int: 747474>",
+            '<MostFieldTypes: char: u"some~unpleasant, string!#%;\'"; dtime: datetime.datetime(2010, 3, 4, 12, 47, 47); int: 474747>',
+        ])
+        self.assertQuerysetEqual(EvenMoreFields.objects.all(), [
+            "<EvenMoreFields: char: u'a very pleasant string'; dtime: datetime.datetime(2011, 4, 3, 10, 11, 12); int: 747474; extra: 47>",
+        ])
