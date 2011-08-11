@@ -250,8 +250,9 @@ class FileField(Field):
         return file
 
     def contribute_to_class(self, cls, name):
-        super(FileField, self).contribute_to_class(cls, name)
+        super(FileField, self).contribute_to_class(cls, name, mark_as_prepared=False)
         setattr(cls, self.name, self.descriptor_class(self))
+        self.mark_as_prepared()
 
     def get_directory_name(self):
         return os.path.normpath(force_unicode(datetime.datetime.now().strftime(smart_str(self.upload_to))))
