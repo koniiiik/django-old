@@ -1,4 +1,4 @@
-from . import Field
+from django.db.models.fields import Field
 from django.utils.namedtuplecompat import namedtuple
 from django.db.models import signals
 from django.utils.encoding import smart_unicode, quote, unquote
