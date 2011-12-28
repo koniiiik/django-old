@@ -666,7 +666,7 @@ class SQLCompiler(object):
             self.query.related_select_cols.extend(columns)
             if self.query.alias_map[alias][JOIN_TYPE] == self.query.LOUTER:
                 self.query.promote_alias_chain(aliases, True)
-            self.query.related_select_fields.extend(f.rel.to._meta.fields)
+            self.query.related_select_fields.extend(f.rel.to._meta.concrete_fields)
             if restricted:
                 next = requested.get(f.name, {})
             else:
@@ -775,7 +775,7 @@ class SQLCompiler(object):
                         if self.query.select_fields:
                             fields = self.query.select_fields + self.query.related_select_fields
                         else:
-                            fields = [f for f in self.query.model._meta.fields if not f.virtual]
+                            fields = self.query.model._meta.concrete_fields
                         # If the field was deferred, exclude it from being passed
                         # into `resolve_columns` because it wasn't selected.
                         only_load = self.deferred_to_columns()
