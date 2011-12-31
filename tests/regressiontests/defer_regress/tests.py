@@ -139,7 +139,7 @@ class DeferRegressionTest(TestCase):
                 "Leaf",
                 "Leaf_Deferred_child_id_second_child_id_value",
                 "Leaf_Deferred_name_value",
-                "Leaf_Deferred_second_child_value",
+                "Leaf_Deferred_second_child_id_value",
                 "Leaf_Deferred_value",
                 "Proxy",
                 "RelatedItem",
