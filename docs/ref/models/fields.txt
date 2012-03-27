@@ -1048,7 +1048,7 @@ define the details of how the relation works.
       DELETE`` constraint to the database field (perhaps using
       :ref:`initial sql<initial-sql>`).
 
-.. versionadded:: 1.4
+.. versionadded:: 1.5
 
 .. attribute:: ForeignKey.composed_of
 
@@ -1192,7 +1192,7 @@ Composite Fields
 
 .. currentmodule:: django.db.models
 
-.. versionadded:: 1.4
+.. versionadded:: 1.5
 
 Composite fields provide a way to group several regular fields into a
 single one.
